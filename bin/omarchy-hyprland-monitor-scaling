@@ -110,6 +110,15 @@ set_scale() {
       -e 's|^hl\.env\("GDK_SCALE", ".*"\)|hl.env("GDK_SCALE", "'"$new_gdk_scale"'")|' \
       "$monitor_lua"
   fi
+
+  # A managed per-output rule (e.g. Atmos's `-- atmos:monitors` block)
+  # shadows the fallback above for that output on every reload. Keep any
+  # such rule for the focused monitor on the same scale, or a change made
+  # here still snaps back on the next reload or reboot.
+  # active_monitor is validated above, so splicing it into the pattern is safe.
+  if [[ -f $monitor_lua ]]; then
+    sed -i -E "/hl\.monitor\(\{ output = \"${active_monitor}\"/ s/(scale = )[0-9.]+/\1${new_scale}/" "$monitor_lua"
+  fi
 }
 
 scale_from_current() {
